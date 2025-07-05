@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>GD Run Tracker</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: #00ffcc;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1 {
+      color: #00ffcc;
+      text-shadow: 0 0 5px #00ffcc;
+    }
+    input, button, select {
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      background: #1f1f1f;
+      border: 1px solid #00ffcc;
+      color: #00ffcc;
+      border-radius: 6px;
+    }
+    .result {
+      background: #1a1a1a;
+      border: 1px solid #00ffcc55;
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎮 GD Run Tracker</h1>
+
+  <label>Nom du niveau :</label><br>
+  <input type="text" id="niveau" placeholder="Ex : Bloodbath"><br>
+
+  <label>Run 1 (% de 0 à x) :</label><br>
+  <input type="number" id="run1"><br>
+
+  <label>Run 2 (% de x à y) :</label><br>
+  <input type="number" id="run2"><br>
+
+  <label>Run 3 (% de x à 100) :</label><br>
+  <input type="number" id="run3"><br>
+
+  <button onclick="analyser()">Analyser mes runs</button>
+
+  <div class="result" id="resultat"></div>
+
+  <script>
+    // === Données des niveaux personnalisées ===
+    const niveaux = {
+      Bloodbath: {
+        difficulte: "Extreme Demon",
+        parties: [
+          { nom: "Intro", plage: [0, 5], difficulte: 2 },
+          { nom: "KrmaL", plage: [5, 20], difficulte: 5 },
+          { nom: "ZenthicAlpha", plage: [20, 30], difficulte: 6 },
+          { nom: "Edzer", plage: [30, 42], difficulte: 9 },
+          { nom: "Michigun", plage: [42, 56], difficulte: 10 },
+          { nom: "Final", plage: [56, 100], difficulte: 6 }
+        ]
+      },
+      Cataclysm: {
+        difficulte: "Extreme Demon",
+        parties: [
+          { nom: "Intro", plage: [0, 6], difficulte: 3 },
+          { nom: "Wave", plage: [6, 18], difficulte: 7 },
+          { nom: "Dual", plage: [18, 32], difficulte: 8 },
+          { nom: "Ship + Ball", plage: [32, 50], difficulte: 9 },
+          { nom: "Final", plage: [50, 100], difficulte: 7 }
+        ]
+      }
+    };
+
+    // === Fonction pour générer un objectif personnalisé ===
+    function genererObjectif(nomNiveau, bestRun) {
+      const niveau = niveaux[nomNiveau];
+
+      if (niveau) {
+        for (let i = 0; i < niveau.parties.length; i++) {
+          const partie = niveau.parties[i];
+          if (bestRun < partie.plage[1]) {
+            return 🎯 Objectif recommandé : ${partie.plage[1]}% (${partie.nom});
+          }
+        }
+        return "✅ Tu as déjà fini toutes les parties connues !";
+      }
+
+      // Sinon : estimation dynamique
+      const partiesAuto = [
+        { plage: [0, 10], difficulte: 2 },
+        { plage: [10, 25], difficulte: 4 },
+        { plage: [25, 40], difficulte: 6 },
+        { plage: [40, 60], difficulte: 8 },
+        { plage: [60, 100], difficulte: 9 }
+      ];
+
+      for (let i = 0; i < partiesAuto.length; i++) {
+        const partie = partiesAuto[i];
+        if (bestRun < partie.plage[1]) {
+          return 🎯 Objectif estimé : ${partie.plage[1]}% (section ${i + 1});
+        }
+      }
+      return "✅ Tu as terminé toutes les sections estimées !";
+    }
+
+    // === Fonction principale ===
+    function analyser() {
+      const nom = document.getElementById("niveau").value.trim();
+      const run1 = parseFloat(document.getElementById("run1").value);
+      const run2 = parseFloat(document.getElementById("run2").value);
+      const run3 = parseFloat(document.getElementById("run3").value);
+
+      if (isNaN(run1) || isNaN(run2) || isNaN(run3)) {
+        document.getElementById("resultat").innerHTML = "❌ Entre des pourcentages valides.";
+        return;
+      }
+
+      const total = run1 + (run2 - run1) + (100 - run3);
+      const bestRun = Math.max(run1, run2, 100 - run3);
+      const objectif = genererObjectif(nom, bestRun);
+
+      document.getElementById("resultat").innerHTML = `
+        ✅ Total progressé (approx) : ${Math.round(total)}%<br>
+        🏆 Meilleure run : ${bestRun}%<br>
+        ${objectif}
+      `;
+    }
+  </script>
+
+</body>
+</html>
